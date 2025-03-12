@@ -3,39 +3,44 @@
 
 export CLOUDSQL_INSTANCE=postgres-orders
 
-# Test database access using a Cloud IAM user before Cloud SQL IAM authentication is configured
-echo "Testing access before configuring IAM authentication (this should fail):"
-echo "------------------------------------------------------------------"
-export USERNAME=$(gcloud config list --format="value(core.account)")
-export POSTGRESQL_IP=$(gcloud sql instances describe $CLOUDSQL_INSTANCE --format="value(ipAddresses[0].ipAddress)")
-export PGPASSWORD=$(gcloud auth print-access-token)
-psql --host=$POSTGRESQL_IP $USERNAME --dbname=orders
-echo "(This should fail with an 'authentication failed' message)"
+# Create directory for scripts if it doesn't exist
+IAM_SCRIPTS_DIR="$(dirname "$0")/iam_auth_scripts"
+if [ ! -d "$IAM_SCRIPTS_DIR" ]; then
+  echo "Creating directory for IAM authentication scripts..."
+  mkdir -p "$IAM_SCRIPTS_DIR"
+fi
 
-# Instructions for creating a Cloud SQL IAM user in the Cloud Console
-echo ""
-echo "Now create a Cloud SQL IAM user in the Cloud Console:"
-echo "1. Navigate to Databases > SQL and click on 'postgres-orders'"
-echo "2. Click 'Users' to open the Users panel"
-echo "3. Click 'Add user account'"
-echo "4. Select 'Cloud IAM'"
-echo "5. In the Principal box enter your lab username"
-echo "6. Click 'Add'"
-echo ""
-echo "Then connect to the postgres-orders instance and grant access to the order_items table:"
-echo "gcloud sql connect postgres-orders --user=postgres --quiet"
-echo "(Enter password: supersecret!)"
-echo "\c orders"
-echo "(Enter password: supersecret!)"
-echo "GRANT ALL PRIVILEGES ON TABLE order_items TO \"[YOUR_IAM_USERNAME]\";"
-echo "\q"
+echo "==================================================================="
+echo "         Cloud SQL IAM Database Authentication Configuration       "
+echo "==================================================================="
 
-# Test database access after Cloud SQL IAM authentication is configured
-echo ""
-echo "After configuring IAM authentication, test access again:"
-echo "export PGPASSWORD=$(gcloud auth print-access-token)"
-echo "psql --host=$POSTGRESQL_IP $USERNAME --dbname=orders"
-echo ""
-echo "Then test your access permissions with these queries:"
-echo "SELECT COUNT(*) FROM order_items; -- Should succeed"
-echo "SELECT COUNT(*) FROM users; -- Should fail with 'permission denied'"
+echo "\nStep 1: Testing database access before IAM authentication\n"
+chmod +x "$IAM_SCRIPTS_DIR/01_test_before_iam.sh"
+bash "$IAM_SCRIPTS_DIR/01_test_before_iam.sh"
+
+echo "\nStep 2: Create a Cloud SQL IAM user\n"
+echo "Please follow the instructions in: $IAM_SCRIPTS_DIR/02_create_iam_user_instructions.md"
+echo "Or execute: cat $IAM_SCRIPTS_DIR/02_create_iam_user_instructions.md"
+
+echo "\nStep 3: Grant database privileges to the IAM user\n"
+echo "Connect to the database and execute the SQL commands in: $IAM_SCRIPTS_DIR/03_grant_privileges.sql"
+echo "Or run: gcloud sql connect postgres-orders --user=postgres"
+echo "Then execute the commands in: $IAM_SCRIPTS_DIR/03_grant_privileges.sql"
+
+echo "\nStep 4: Test database access after IAM authentication\n"
+echo "After completing steps 2 and 3, run the test script:"
+chmod +x "$IAM_SCRIPTS_DIR/04_test_after_iam.sh"
+echo "Execute: bash $IAM_SCRIPTS_DIR/04_test_after_iam.sh"
+
+echo "\nStep 5: Test database permissions\n"
+echo "When connected to the database, run the queries in: $IAM_SCRIPTS_DIR/05_test_queries.sql"
+echo "Or execute: cat $IAM_SCRIPTS_DIR/05_test_queries.sql"
+
+echo "\n==================================================================="
+echo "                   Task Completion Checklist                     "
+echo "==================================================================="
+echo "✓ Test database access before IAM authentication (should fail)"
+echo "✓ Create a Cloud SQL IAM user in the Cloud Console"
+echo "✓ Grant database privileges to your IAM user"
+echo "✓ Test database access after IAM authentication (should succeed)"
+echo "✓ Verify appropriate access permissions for the IAM user"
