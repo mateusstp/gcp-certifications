@@ -1,0 +1,5 @@
+# Query for viewing pgAudit logs in Logs Explorer
+
+resource.type="cloudsql_database"
+logName="projects/(GCP Project)/logs/cloudaudit.googleapis.com%2Fdata_access"
+protoPayload.request.@type="type.googleapis.com/google.cloud.sql.audit.v1.PgAuditEntry"
