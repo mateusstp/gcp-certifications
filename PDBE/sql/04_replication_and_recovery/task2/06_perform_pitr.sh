@@ -6,9 +6,9 @@ export CLOUD_SQL_INSTANCE=postgres-orders
 export NEW_INSTANCE_NAME=postgres-orders-pitr
 
 # Prompt for the timestamp to use for point-in-time recovery
-echo "Please enter the timestamp you saved earlier (in RFC 3339 format, e.g., '2021-11-01 15:00:00'):"
-read TIMESTAMP
-
+# echo "Please enter the timestamp you saved earlier (in RFC 3339 format, e.g., '2021-11-01 15:00:00'):"
+# read TIMESTAMP
+export TIMESTAMP=$(date --rfc-3339=seconds)
 # Create a point-in-time clone of the instance
 echo "\nCreating point-in-time clone with timestamp: $TIMESTAMP"
 gcloud sql instances clone $CLOUD_SQL_INSTANCE $NEW_INSTANCE_NAME \
